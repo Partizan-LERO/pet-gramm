@@ -3,30 +3,51 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/gorilla/mux"
+	"html/template"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"sort"
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Not enough arguments")
-		return
+type ViewData struct{
+	Title string
+	Anagrams []string
+}
+
+func productsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	m := getAnagrams(id)
+	var anagrams []string
+	for _, a := range m {
+		if len(a) > 1 {
+			for _, v := range a {
+				anagrams = append(anagrams, string(v))
+			}
+		}
 	}
 
-	arg := os.Args[1]
+	data := ViewData{
+		Title : id,
+		Anagrams : anagrams,
+	}
 
+	tmpl, _ := template.ParseFiles("templates/index.html")
+	tmpl.Execute(w, data)
+}
+
+func getAnagrams(arg string) map[string][][]byte  {
 	r, err := http.Get("https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt")
 	if err != nil {
 		fmt.Println(err)
-		return
+		panic(err)
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 	if err != nil {
 		fmt.Println(err)
-		return
+		panic(err)
 	}
 
 	var bs byteSlice
@@ -49,11 +70,16 @@ func main() {
 		}
 	}
 
-	for _, a := range m {
-		if len(a) > 1 {
-			fmt.Printf("%s\n", a)
-		}
-	}
+	return m
+}
+
+func main() {
+	router := mux.NewRouter()
+	router.HandleFunc("/{id:[a-z]+}", productsHandler)
+	http.Handle("/",router)
+
+	fmt.Println("Server is listening...")
+	http.ListenAndServe(":8181", nil)
 }
 
 type byteSlice []byte

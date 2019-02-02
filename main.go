@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
@@ -12,14 +13,24 @@ import (
 
 type ViewData struct{
 	Title string
-	Anagrams []string
 }
 
-func productsHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	data := ViewData{
+		Title : "Anagram generator",
+	}
+
+	tmpl, _ := template.ParseFiles("templates/index.html")
+	tmpl.Execute(w, data)
+}
+
+func anagramHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := vars["word"]
 	m := getAnagrams(id)
-	var anagrams []string
+
+	var anagrams[]string
+
 	for _, a := range m {
 		if len(a) > 1 {
 			for _, v := range a {
@@ -28,13 +39,9 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	data := ViewData{
-		Title : id,
-		Anagrams : anagrams,
-	}
-
-	tmpl, _ := template.ParseFiles("templates/index.html")
-	tmpl.Execute(w, data)
+	js, _ := json.Marshal(anagrams)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 func getAnagrams(arg string) map[string][][]byte  {
@@ -45,6 +52,7 @@ func getAnagrams(arg string) map[string][][]byte  {
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	r.Body.Close()
+
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
@@ -73,9 +81,21 @@ func getAnagrams(arg string) map[string][][]byte  {
 	return m
 }
 
+func errorHandler(w http.ResponseWriter, r *http.Request)  {
+	js, _ := json.Marshal(nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	w.Write(js)
+}
+
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/{id:[a-z]+}", productsHandler)
+	router.HandleFunc("/", indexHandler)
+	router.HandleFunc("/word/{word:[a-z]+}", anagramHandler)
+	router.HandleFunc("/word/{word:[1-9]+}", errorHandler)
+	router.HandleFunc("/word/}", errorHandler)
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("js"))))
+	http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("img"))))
 	http.Handle("/",router)
 
 	fmt.Println("Server is listening...")

@@ -3,20 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ .Title}}</title>
+    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
 </head>
 <body>
 <div class="container">
-    <h1>Anagrams for: <u>{{ .Title}}</u> </h1><br>
-    <ul>
-    {{range .Anagrams}}
-        <li><b>{{ . }}</b></li>
-    {{end}}
-    </ul>
+    <h1>{{ .Title}}</h1>
+
+    <form>
+        <div class="form-row align-items-center">
+            <div class="col-sm-9 my-1">
+                <label class="sr-only">Word</label>
+                <input type="text" class="form-control" id="word" placeholder="Word">
+            </div>
+            <div class="col-auto my-1">
+                <button type="submit" class="btn btn-primary search disabled">Search</button>
+            </div>
+        </div>
+    </form>
+    <div id="anagrams-list"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

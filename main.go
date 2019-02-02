@@ -11,13 +11,13 @@ import (
 	"sort"
 )
 
-type ViewData struct{
+type ViewData struct {
 	Title string
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	data := ViewData{
-		Title : "Anagram generator",
+		Title: "Anagram generator",
 	}
 
 	tmpl, _ := template.ParseFiles("templates/index.html")
@@ -29,7 +29,7 @@ func anagramHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["word"]
 	m := getAnagrams(id)
 
-	var anagrams[]string
+	var anagrams []string
 
 	for _, a := range m {
 		if len(a) > 1 {
@@ -44,7 +44,7 @@ func anagramHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-func getAnagrams(arg string) map[string][][]byte  {
+func getAnagrams(arg string) map[string][][]byte {
 	r, err := http.Get("https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt")
 	if err != nil {
 		fmt.Println(err)
@@ -81,7 +81,7 @@ func getAnagrams(arg string) map[string][][]byte  {
 	return m
 }
 
-func errorHandler(w http.ResponseWriter, r *http.Request)  {
+func errorHandler(w http.ResponseWriter, r *http.Request) {
 	js, _ := json.Marshal(nil)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
@@ -96,10 +96,10 @@ func main() {
 	router.HandleFunc("/word/}", errorHandler)
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("js"))))
 	http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("img"))))
-	http.Handle("/",router)
+	http.Handle("/", router)
 
 	fmt.Println("Server is listening...")
-	http.ListenAndServe(":8181", nil)
+	http.ListenAndServe("127.0.0.1:8181", nil)
 }
 
 type byteSlice []byte
